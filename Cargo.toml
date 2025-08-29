@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["apps/http-api"]
+members = ["apps/http-api", "shared"]
 
 [workspace.dependencies]
 # --- Utilities ---
@@ -34,4 +34,14 @@ sqlx = { version = "0.8.3", features = [
   "derive",
   "json",
   "rust_decimal",
+] }
+
+# --- OpenAPI ---
+utoipa = { version = "5.4.0", features = [
+  "macros",
+  "axum_extras",
+  "debug",
+  "chrono",
+  "uuid",
+  "decimal",
 ] }
