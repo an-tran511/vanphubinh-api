@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use axum::Router;
-use http_api::config;
+use http_api::{app_state::AppState, config};
+use sqlx::PgPool;
 use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
@@ -12,7 +15,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting VPB ERP Backend...");
 
-    let app = Router::new().with_state(CorsLayer::permissive());
+    let pool = PgPool::connect(&config.db_url).await?;
+
+    let app_state = Arc::new(AppState { pool });
+
+    let app = Router::new()
+        .with_state(CorsLayer::permissive())
+        .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind(config.addr).await?;
     info!("Listening on http://{}", config.addr);
