@@ -7,9 +7,8 @@ use serde::Serialize;
 use utoipa::{ToResponse, ToSchema};
 
 /// Success response
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize, ToSchema, ToResponse)]
 #[schema(title = "SuccessResponse")]
-
 pub struct SuccessResponse<T, M>
 where
     T: Serialize + ToSchema,
@@ -22,9 +21,42 @@ where
     pub meta: Option<M>,
 }
 
-/// RFC 9457 Problem Details (error)
-#[derive(Serialize, ToSchema)]
-pub struct ProblemDetails {
+impl<T, M> SuccessResponse<T, M>
+where
+    T: Serialize + ToSchema,
+    M: Serialize + ToSchema,
+{
+    pub fn new(data: T) -> Self {
+        Self {
+            success: true,
+            data,
+            meta: None,
+        }
+    }
+
+    pub fn with_meta(data: T, meta: M) -> Self {
+        Self {
+            success: true,
+            data,
+            meta: Some(meta),
+        }
+    }
+}
+
+impl<T, M> IntoResponse for SuccessResponse<T, M>
+where
+    T: Serialize + ToSchema,
+    M: Serialize + ToSchema,
+{
+    fn into_response(self) -> Response {
+        (StatusCode::OK, Json(self)).into_response()
+    }
+}
+
+/// RFC 9457 Problem Details (error response)
+#[derive(Serialize, ToSchema, ToResponse)]
+#[schema(title = "ErrorResponse")]
+pub struct ErrorResponse {
     pub success: bool,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -40,63 +72,53 @@ pub struct ProblemDetails {
     pub instance: Option<String>,
 }
 
-/// Unified API response
-#[derive(Serialize, ToSchema, ToResponse)]
-pub enum ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
-    Success(SuccessResponse<T, M>),
-    Error(ProblemDetails),
-}
-
-impl<T, M> ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
-    pub fn success(data: T) -> Self {
-        ApiResponse::Success(SuccessResponse {
-            success: true,
-            data,
-            meta: None,
-        })
-    }
-
-    pub fn with_meta(data: T, meta: M) -> Self {
-        ApiResponse::Success(SuccessResponse {
-            success: true,
-            data,
-            meta: Some(meta),
-        })
-    }
-
-    pub fn error(status: StatusCode, title: impl Into<String>) -> Self {
-        ApiResponse::Error(ProblemDetails {
+impl ErrorResponse {
+    pub fn new(status: StatusCode, title: impl Into<String>) -> Self {
+        Self {
             success: false,
             r#type: None,
             title: title.into(),
             status: status.as_u16(),
             detail: None,
             instance: None,
-        })
+        }
+    }
+
+    pub fn with_detail(
+        status: StatusCode,
+        title: impl Into<String>,
+        detail: impl Into<String>,
+    ) -> Self {
+        Self {
+            success: false,
+            r#type: None,
+            title: title.into(),
+            status: status.as_u16(),
+            detail: Some(detail.into()),
+            instance: None,
+        }
+    }
+
+    pub fn with_type_and_detail(
+        status: StatusCode,
+        title: impl Into<String>,
+        r#type: impl Into<String>,
+        detail: impl Into<String>,
+    ) -> Self {
+        Self {
+            success: false,
+            r#type: Some(r#type.into()),
+            title: title.into(),
+            status: status.as_u16(),
+            detail: Some(detail.into()),
+            instance: None,
+        }
     }
 }
 
-impl<T, M> IntoResponse for ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
+impl IntoResponse for ErrorResponse {
     fn into_response(self) -> Response {
-        match self {
-            ApiResponse::Success(success) => (StatusCode::OK, Json(success)).into_response(),
-            ApiResponse::Error(problem) => {
-                let status = StatusCode::from_u16(problem.status)
-                    .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-                (status, Json(problem)).into_response()
-            }
-        }
+        let status = StatusCode::from_u16(self.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        (status, Json(self)).into_response()
     }
 }

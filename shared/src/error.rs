@@ -1,4 +1,4 @@
-use crate::response::ProblemDetails;
+use crate::response::ErrorResponse;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use thiserror::Error;
@@ -30,56 +30,31 @@ impl From<anyhow::Error> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let problem_details = match self {
-            AppError::NotFound(msg) => ProblemDetails {
-                success: false,
-                r#type: None,
-                title: "Not Found".to_string(),
-                status: StatusCode::NOT_FOUND.as_u16(),
-                detail: Some(msg),
-                instance: None,
-            },
+        match self {
+            AppError::NotFound(msg) => {
+                ErrorResponse::with_detail(StatusCode::NOT_FOUND, "Not Found", msg).into_response()
+            }
 
-            AppError::BadRequest(msg) => ProblemDetails {
-                success: false,
-                r#type: None,
-                title: "Bad Request".to_string(),
-                status: StatusCode::BAD_REQUEST.as_u16(),
-                detail: Some(msg),
-                instance: None,
-            },
+            AppError::BadRequest(msg) => {
+                ErrorResponse::with_detail(StatusCode::BAD_REQUEST, "Bad Request", msg)
+                    .into_response()
+            }
 
-            AppError::Unauthorized => ProblemDetails {
-                success: false,
-                r#type: None,
-                title: "Unauthorized".to_string(),
-                status: StatusCode::UNAUTHORIZED.as_u16(),
-                detail: None,
-                instance: None,
-            },
+            AppError::Unauthorized => {
+                ErrorResponse::new(StatusCode::UNAUTHORIZED, "Unauthorized").into_response()
+            }
 
-            AppError::Forbidden => ProblemDetails {
-                success: false,
-                r#type: None,
-                title: "Forbidden".to_string(),
-                status: StatusCode::FORBIDDEN.as_u16(),
-                detail: None,
-                instance: None,
-            },
+            AppError::Forbidden => {
+                ErrorResponse::new(StatusCode::FORBIDDEN, "Forbidden").into_response()
+            }
 
-            AppError::Internal(err) => ProblemDetails {
-                success: false,
-                r#type: None,
-                title: "Internal Server Error".to_string(),
-                status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                detail: Some(err.to_string()),
-                instance: None,
-            },
-        };
-
-        let status = StatusCode::from_u16(problem_details.status)
-            .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-        (status, axum::Json(problem_details)).into_response()
+            AppError::Internal(err) => ErrorResponse::with_detail(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal Server Error",
+                err.to_string(),
+            )
+            .into_response(),
+        }
     }
 }
 

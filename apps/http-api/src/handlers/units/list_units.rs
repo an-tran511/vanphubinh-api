@@ -5,7 +5,7 @@ use axum::extract::Query;
 use axum::{Json, extract::State};
 use serde::Deserialize;
 use shared::usecase::Usecase;
-use shared::{common_types::PaginationMeta, error::AppError, response::ApiResponse};
+use shared::{common_types::PaginationMeta, error::AppError, response::SuccessResponse};
 use units_management::domain::unit::Unit;
 use units_management::usecases::list_units::{ListUnitsInput, ListUnitsUsecase};
 use utoipa::{IntoParams, ToSchema};
@@ -27,13 +27,13 @@ pub struct ListUnitsRequest {
     tag = "Units",
     params(ListUnitsRequest),
     responses(
-        (status = 200, description = "List of units", body = inline(ApiResponse<Vec<Unit>, PaginationMeta>)),
+        (status = 200, description = "List of units", body = inline(SuccessResponse<Vec<Unit>, PaginationMeta>)),
     ),
 )]
 pub async fn list_units(
     State(app_state): State<Arc<AppState>>,
     Query(query): Query<ListUnitsRequest>,
-) -> Result<Json<ApiResponse<Vec<Unit>, PaginationMeta>>, AppError> {
+) -> Result<Json<SuccessResponse<Vec<Unit>, PaginationMeta>>, AppError> {
     let usecase = ListUnitsUsecase::new(app_state.pool.clone());
 
     let input: ListUnitsInput = ListUnitsInput {
@@ -43,5 +43,5 @@ pub async fn list_units(
 
     let output = usecase.execute(input).await.map_err(AppError::from)?;
 
-    Ok(Json(ApiResponse::with_meta(output.units, output.meta)))
+    Ok(Json(SuccessResponse::with_meta(output.units, output.meta)))
 }
