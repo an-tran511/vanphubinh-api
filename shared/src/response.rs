@@ -4,10 +4,12 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
-use utoipa::ToSchema;
+use utoipa::{ToResponse, ToSchema};
 
 /// Success response
 #[derive(Serialize, ToSchema)]
+#[schema(title = "SuccessResponse")]
+
 pub struct SuccessResponse<T, M>
 where
     T: Serialize + ToSchema,
@@ -39,7 +41,7 @@ pub struct ProblemDetails {
 }
 
 /// Unified API response
-#[derive(ToSchema)]
+#[derive(Serialize, ToSchema, ToResponse)]
 pub enum ApiResponse<T, M>
 where
     T: Serialize + ToSchema,

@@ -1,0 +1,14 @@
+[package]
+name = "units_management"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-trait = { workspace = true }
+derive_more = { workspace = true }
+rust_decimal = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+shared = { path = "../../shared" }
+uuid = { workspace = true }
+utoipa = { workspace = true }

@@ -2,6 +2,12 @@
 name = "http-api"
 version = "0.1.0"
 edition = "2024"
+default-run = "http-api"
+
+[[bin]]
+name = "http-api"
+path = "src/main.rs"
+
 
 [dependencies]
 async-trait = { workspace = true }
@@ -14,3 +20,9 @@ tokio = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+units_management = { path = "../../contexts/units_management" }
+utoipa = { workspace = true }
+utoipa-axum = { workspace = true }
+utoipa-scalar = { workspace = true }
+utoipauto = { workspace = true }
+shared = { path = "../../shared" }

@@ -1,99 +1,114 @@
-use axum::{
-    Json,
-    http::StatusCode,
-    response::{IntoResponse, Response},
-};
-use serde::Serialize;
-use utoipa::ToSchema;
+use crate::response::ProblemDetails;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use thiserror::Error;
+use tracing::error;
 
-/// Success response
-#[derive(Serialize, ToSchema)]
-pub struct SuccessResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
-    pub success: bool,
-    pub data: T,
+#[derive(Error, Debug)]
+pub enum AppError {
+    #[error("Not Found: {0}")]
+    NotFound(String),
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub meta: Option<M>,
+    #[error("Bad Request: {0}")]
+    BadRequest(String),
+
+    #[error("Internal server error")]
+    Internal(anyhow::Error),
+
+    #[error("Unauthorized")]
+    Unauthorized,
+
+    #[error("Forbidden")]
+    Forbidden,
 }
 
-/// RFC 9457 Problem Details (error)
-#[derive(Serialize, ToSchema)]
-pub struct ProblemDetails {
-    pub success: bool,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
-
-    pub title: String,
-    pub status: u16,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub detail: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub instance: Option<String>,
-}
-
-/// Unified API response
-#[derive(ToSchema)]
-pub enum ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
-    Success(SuccessResponse<T, M>),
-    Error(ProblemDetails),
-}
-
-impl<T, M> ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
-    pub fn success(data: T) -> Self {
-        ApiResponse::Success(SuccessResponse {
-            success: true,
-            data,
-            meta: None,
-        })
-    }
-
-    pub fn with_meta(data: T, meta: M) -> Self {
-        ApiResponse::Success(SuccessResponse {
-            success: true,
-            data,
-            meta: Some(meta),
-        })
-    }
-
-    pub fn error(status: StatusCode, title: impl Into<String>) -> Self {
-        ApiResponse::Error(ProblemDetails {
-            success: false,
-            r#type: None,
-            title: title.into(),
-            status: status.as_u16(),
-            detail: None,
-            instance: None,
-        })
+impl From<anyhow::Error> for AppError {
+    fn from(err: anyhow::Error) -> Self {
+        AppError::Internal(err)
     }
 }
 
-impl<T, M> IntoResponse for ApiResponse<T, M>
-where
-    T: Serialize + ToSchema,
-    M: Serialize + ToSchema,
-{
+impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        match self {
-            ApiResponse::Success(success) => (StatusCode::OK, Json(success)).into_response(),
-            ApiResponse::Error(problem) => {
-                let status = StatusCode::from_u16(problem.status)
-                    .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-                (status, Json(problem)).into_response()
+        let problem_details = match self {
+            AppError::NotFound(msg) => ProblemDetails {
+                success: false,
+                r#type: None,
+                title: "Not Found".to_string(),
+                status: StatusCode::NOT_FOUND.as_u16(),
+                detail: Some(msg),
+                instance: None,
+            },
+
+            AppError::BadRequest(msg) => ProblemDetails {
+                success: false,
+                r#type: None,
+                title: "Bad Request".to_string(),
+                status: StatusCode::BAD_REQUEST.as_u16(),
+                detail: Some(msg),
+                instance: None,
+            },
+
+            AppError::Unauthorized => ProblemDetails {
+                success: false,
+                r#type: None,
+                title: "Unauthorized".to_string(),
+                status: StatusCode::UNAUTHORIZED.as_u16(),
+                detail: None,
+                instance: None,
+            },
+
+            AppError::Forbidden => ProblemDetails {
+                success: false,
+                r#type: None,
+                title: "Forbidden".to_string(),
+                status: StatusCode::FORBIDDEN.as_u16(),
+                detail: None,
+                instance: None,
+            },
+
+            AppError::Internal(err) => ProblemDetails {
+                success: false,
+                r#type: None,
+                title: "Internal Server Error".to_string(),
+                status: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
+                detail: Some(err.to_string()),
+                instance: None,
+            },
+        };
+
+        let status = StatusCode::from_u16(problem_details.status)
+            .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+        (status, axum::Json(problem_details)).into_response()
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum UsecaseError {
+    #[error("Validation failed: {0}")]
+    Validation(String),
+
+    #[error("Business rule violation: {0}")]
+    BusinessRule(String),
+
+    #[error("Database error: {0}")]
+    Sqlx(#[from] sqlx::Error),
+}
+
+impl From<UsecaseError> for AppError {
+    fn from(err: UsecaseError) -> Self {
+        match err {
+            UsecaseError::Validation(msg) => {
+                error!("Validation error: {}", msg);
+                AppError::BadRequest(msg)
+            }
+            UsecaseError::BusinessRule(msg) => {
+                error!("Business rule violation: {}", msg);
+                AppError::BadRequest(msg)
+            }
+            UsecaseError::Sqlx(sqlx_err) => {
+                error!("Database error: {:?}", sqlx_err);
+                AppError::Internal(sqlx_err.into())
             }
         }
     }
