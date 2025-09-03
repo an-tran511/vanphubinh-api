@@ -9,9 +9,11 @@ use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
+use utoipauto::utoipauto;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[utoipauto(paths = "./shared/src from shared")]
     #[derive(OpenApi)]
     #[openapi(info(
         title = "Van Phu Binh API",
