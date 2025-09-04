@@ -1,4 +1,3 @@
-use rust_decimal::Decimal;
 use serde::Serialize;
 use shared::common_types::{PaginationInput, PaginationMeta};
 use sqlx::{FromRow, PgPool};
@@ -7,21 +6,9 @@ use uuid::Uuid;
 
 #[derive(Debug, FromRow, Serialize, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct UnitType {
-    pub id: Uuid,
-    pub name: String,
-    pub base_unit_id: Uuid,
-}
-
-#[derive(Debug, FromRow, Serialize, Clone, ToSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct Unit {
     pub id: Uuid,
     pub name: String,
-    pub symbol: String,
-    pub unit_type_id: Option<Uuid>,
-    pub factor: Decimal,
-    pub is_active: bool,
 }
 
 #[async_trait::async_trait]
