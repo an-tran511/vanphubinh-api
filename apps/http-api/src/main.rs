@@ -2,8 +2,13 @@ use std::env;
 use std::fs;
 use std::sync::Arc;
 
-use http_api::{app_state::AppState, config, routes::units_router};
+use http_api::{
+    app_state::AppState,
+    config,
+    routes::{product_category_router, units_router},
+};
 use sqlx::PgPool;
+use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
@@ -33,6 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let openapi = ApiDoc::openapi();
     let (app, openapi_doc) = OpenApiRouter::with_openapi(openapi.clone())
         .nest("/units", units_router::init())
+        .nest("/product_categories", product_category_router::init())
         .with_state(app_state)
         .split_for_parts();
 
@@ -41,7 +47,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         generate_openapi_json(&openapi_doc)?;
     }
 
-    let app = app.merge(Scalar::with_url("/docs", openapi_doc.clone()));
+    let app = app
+        .merge(Scalar::with_url("/docs", openapi_doc.clone()))
+        .layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind(config.addr).await?;
     info!("Listening on http://{}", config.addr);
@@ -82,5 +90,11 @@ fn init_tracing() {
     let env_filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| "http_api=info,tower_http=debug".into());
 
-    tracing_subscriber::fmt().with_env_filter(env_filter).init();
+    // Log the env filter being used
+    println!("Using tracing env filter: {}", env_filter);
+
+    tracing_subscriber::fmt()
+        .with_target(false)
+        .with_env_filter(env_filter)
+        .init();
 }

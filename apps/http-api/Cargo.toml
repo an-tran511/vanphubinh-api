@@ -21,6 +21,7 @@ tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 units_management = { path = "../../contexts/units_management" }
+products_management = { path = "../../contexts/products_management" }
 utoipa = { workspace = true }
 utoipa-axum = { workspace = true }
 utoipa-scalar = { workspace = true }
