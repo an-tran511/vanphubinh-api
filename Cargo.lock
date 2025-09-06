@@ -1426,6 +1426,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "products_management"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "derive_more",
+ "rust_decimal",
+ "serde",
+ "shared",
+ "sqlx",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
 name = "ptr_meta"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["apps/http-api", "contexts/units_management", "shared"]
+members = [
+  "apps/http-api",
+  "contexts/products_management",
+  "contexts/units_management",
+  "shared",
+]
 
 [workspace.dependencies]
 # --- Utilities ---
