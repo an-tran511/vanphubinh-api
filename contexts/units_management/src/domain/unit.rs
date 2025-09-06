@@ -18,4 +18,6 @@ pub trait UnitRepository: Send + Sync {
         pool: &PgPool,
         pagination: PaginationInput,
     ) -> Result<(Vec<Unit>, PaginationMeta), sqlx::Error>;
+
+    async fn create(&self, pool: &PgPool, unit: Unit) -> Result<Unit, sqlx::Error>;
 }

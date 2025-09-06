@@ -39,4 +39,15 @@ impl UnitRepository for UnitRepoImpl {
             },
         ))
     }
+
+    async fn create(&self, pool: &PgPool, unit: Unit) -> Result<Unit, sqlx::Error> {
+        let unit =
+            sqlx::query_as::<_, Unit>("INSERT INTO units (id, name) VALUES ($1, $2) RETURNING *")
+                .bind(unit.id)
+                .bind(unit.name)
+                .fetch_one(pool)
+                .await?;
+
+        Ok(unit)
+    }
 }

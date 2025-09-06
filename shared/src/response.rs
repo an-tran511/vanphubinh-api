@@ -4,7 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
-use utoipa::ToSchema;
+use utoipa::{ToResponse, ToSchema};
 
 /// Success response
 #[derive(Serialize, ToSchema)]
@@ -54,7 +54,7 @@ where
 }
 
 /// RFC 9457 Problem Details (error response)
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema, ToResponse)]
 pub struct ErrorResponse {
     pub success: bool,
 
