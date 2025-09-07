@@ -792,6 +792,7 @@ dependencies = [
  "utoipa-axum",
  "utoipa-scalar",
  "utoipauto",
+ "uuid",
 ]
 
 [[package]]

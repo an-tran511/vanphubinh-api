@@ -2,6 +2,7 @@ pub mod app_state;
 pub mod config;
 pub mod handlers {
     pub mod product_categories {
+        pub mod create_product_category;
         pub mod list_product_categories;
     }
     pub mod units {

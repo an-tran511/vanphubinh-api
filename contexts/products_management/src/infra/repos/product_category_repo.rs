@@ -47,10 +47,11 @@ impl ProductCategoryRepository for ProductCategoryRepoImpl {
         unit: ProductCategory,
     ) -> Result<ProductCategory, sqlx::Error> {
         let product_category = sqlx::query_as::<_, ProductCategory>(
-            "INSERT INTO product_categories (id, name) VALUES ($1, $2) RETURNING *",
+            "INSERT INTO product_categories (id, name, parent_product_category_id) VALUES ($1, $2, $3) RETURNING *",
         )
         .bind(unit.id)
         .bind(unit.name)
+        .bind(unit.parent_product_category_id)
         .fetch_one(pool)
         .await?;
 

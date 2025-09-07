@@ -26,4 +26,5 @@ utoipa = { workspace = true }
 utoipa-axum = { workspace = true }
 utoipa-scalar = { workspace = true }
 utoipauto = { workspace = true }
+uuid = { workspace = true }
 shared = { path = "../../shared" }

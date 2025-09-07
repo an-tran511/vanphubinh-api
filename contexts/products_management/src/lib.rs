@@ -7,5 +7,6 @@ pub mod infra {
     }
 }
 pub mod usecases {
+    pub mod create_product_category;
     pub mod list_product_categories;
 }
