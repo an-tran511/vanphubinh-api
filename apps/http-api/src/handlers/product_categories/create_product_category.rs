@@ -29,7 +29,6 @@ pub struct CreateProductCategoryResponse {
     post,
     path = "/create_product_category",
     summary = "Create a new product category",
-    description = "Create a new product category",
     tag = "Product Categories",
     request_body = CreateProductCategoryRequest,
     responses(

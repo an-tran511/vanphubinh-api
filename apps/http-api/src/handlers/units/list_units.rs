@@ -24,6 +24,7 @@ pub struct ListUnitsRequest {
 #[utoipa::path(
     get,
     path = "/list_units",
+    summary = "List paginated units",
     tag = "Units",
     params(ListUnitsRequest),
     responses(

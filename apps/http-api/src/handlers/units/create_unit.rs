@@ -27,7 +27,8 @@ pub struct CreateUnitResponse {
 #[utoipa::path(
     post,
     path = "/create_unit",
-        tag = "Units",
+    summary = "Create a new unit",
+    tag = "Units",
     request_body = CreateUnitRequest,
     responses(
         (status = 201, description = "Unit created successfully", body = CreateUnitResponse),

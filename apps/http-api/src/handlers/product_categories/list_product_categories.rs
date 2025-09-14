@@ -26,6 +26,7 @@ pub struct ListProductCategoriesRequest {
 #[utoipa::path(
     get,
     path = "/list_product_categories",
+    summary = "List paginated product categories",
     tag = "Product Categories",
     params(ListProductCategoriesRequest),
     responses(
