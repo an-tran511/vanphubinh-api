@@ -16,6 +16,7 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 use utoipauto::utoipauto;
 
+#[forbid(unsafe_code)]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[utoipauto(paths = "./shared/src from shared")]
@@ -26,10 +27,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         description = "API for managing Van Phu Binh Internal System"
     ))]
     pub struct ApiDoc;
+    let config = config::Config::new()?;
 
     init_tracing();
 
-    let config = config::Config::new()?;
     info!("Starting VPB ERP Backend...");
 
     let pool = PgPool::connect(&config.db_url).await?;

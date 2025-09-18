@@ -10,9 +10,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         // Load environment variables from .env file if it exists
-        if let Err(e) = dotenvy::dotenv() {
-            tracing::warn!("Failed to load .env file: {}", e);
-        }
+        dotenvy::dotenv().ok();
 
         let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("PORT")
